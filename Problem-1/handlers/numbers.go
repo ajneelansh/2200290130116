@@ -4,9 +4,9 @@ import (
 	"encoding/json"
 	"time"
 
-	"github.com/ajneelansh/Problem-1/services"
-	"github.com/ajneelansh/Problem-1/storage"
-	"github.com/ajneelansh/Problem-1/utils"
+	"github.com/ajneelansh/2200290130116/Problem-1/services"
+	"github.com/ajneelansh/2200290130116/Problem-1/storage"
+	"github.com/ajneelansh/2200290130116/Problem-1/utils"
 
 	"github.com/gin-gonic/gin"
 )

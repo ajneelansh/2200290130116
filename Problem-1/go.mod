@@ -1,4 +1,4 @@
-module main.go
+module github.com/ajneelansh/2200290130116/Problem-1
 
 go 1.23.2
 
