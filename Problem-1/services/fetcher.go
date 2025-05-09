@@ -6,42 +6,70 @@ import (
 	"fmt"
 	"net/http"
 	"time"
+	"os"
 )
 
-var apiMap = map[string]string{
-	"p": "primes",
-	"f": "fibo",
-	"e": "even",
-	"r": "rand",
-}
-
-type NumberResponse struct {
+type NumbersResponse struct {
 	Numbers []int `json:"numbers"`
 }
 
-func FetchNumbers(id string, timeout time.Duration) ([]int, error) {
-	api, ok := apiMap[id]
-	if !ok {
-		return nil, errors.New("invalid number id")
+func GetAPIUrl(numberId string) string {
+	switch numberId {
+	case "p":
+		return "http://20.244.56.144/evaluation-service/primes"
+	case "f":
+		return "http://20.244.56.144/evaluation-service/fibo"
+	case "e":
+		return "http://20.244.56.144/evaluation-service/even"
+	case "r":
+		return "http://20.244.56.144/evaluation-service/rand"
+	default:
+		return ""
 	}
+}
 
-	url := fmt.Sprintf("http://20.244.56.144/evaluation-service/%s", api)
+func FetchNumbers(numberId string, timeout time.Duration) ([]int, error) {
+	url := GetAPIUrl(numberId)
+	if url == "" {
+		return nil, errors.New("invalid numberId")
+	}
 
 	client := http.Client{
 		Timeout: timeout,
 	}
 
-	resp, err := client.Get(url)
+	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		return nil, err 
+		return nil, err
+	}
+
+	token := os.Getenv("ACCESS_TOKEN")
+	if token == "" {
+		return nil, errors.New("access token missing in environment")
+	}
+	req.Header.Set("Authorization", "Bearer "+token)
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
 	}
 	defer resp.Body.Close()
 
-	var result NumberResponse
-	err = json.NewDecoder(resp.Body).Decode(&result)
-	if err != nil {
-		return nil, err 
+	fmt.Println("API Status:", resp.Status)
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("received non-200 response: %d", resp.StatusCode)
 	}
 
-	return result.Numbers, nil
+	var numbersResp NumbersResponse
+	err = json.NewDecoder(resp.Body).Decode(&numbersResp)
+	if err != nil {
+		return nil, err
+	}
+
+	fmt.Println("[DEBUG] Numbers received:", numbersResp.Numbers)
+
+
+	return numbersResp.Numbers, nil
+
 }
